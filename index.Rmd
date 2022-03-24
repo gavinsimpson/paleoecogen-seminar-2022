@@ -2,7 +2,7 @@
 title: "Detecting change in palaeoecological time series, old and new"
 author: "Gavin Simpson"
 institute: "Department of Animal Science • Aarhus Universitet"
-date: "PaleoEcoGen Seminar Series • March 10, 2022"
+date: "PaleoEcoGen Seminar • March 24, 2022"
 output:
   xaringan::moon_reader:
     css: ['default', 'https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css', 'slides.css']
@@ -26,7 +26,6 @@ options(htmltools.dir.version = FALSE)
 knitr::opts_chunk$set(cache = TRUE, dev = 'svg', echo = FALSE, message = FALSE, warning = FALSE,
                       fig.height=6, fig.width = 1.777777*6)
 
-library("curl")
 library("ggplot2")
 library("dplyr")
 library("tibble")
@@ -38,7 +37,7 @@ library('purrr')
 library('gganimate')
 library('gratia')
 library('readr')
-library('cowplot')
+library('patchwork')
 theme_set(theme_minimal(base_size = 14, base_family = 'Fira Sans'))
 library('readxl')
 library('here')
@@ -193,7 +192,7 @@ Phenomenologically, community variance is a useful thing to know&hellip;
 
 We could (and many people have) spent decades quibbling about what "resilience" is and how to define it
 
-From a phenomenological viewpoint, I hope we can agree that the variance of a community tells us something about the dynamics of that community and change in variance tells us something about changes in those dynamics over time --- and that is something useful
+From a phenomenological viewpoint, I hope we can agree that the variance of a community tells us something about the dynamics of that community and change in variance tells us something about changes in those dynamics over time &mdash; and that is something useful
 
 ---
 
@@ -504,8 +503,8 @@ $$\vartheta_{\sigma} = \beta_0 + f(\mathtt{time})$$
 
 3. A Gamma distributional GAM with
 
-$$\vartheta_{\mu} = \beta_0 + f(\mathtt{t})$$
-$$\vartheta_{\alpha} = \beta_0 + f(\mathtt{t})$$
+$$\vartheta_{\mu} = \beta_0 + f(\mathtt{time})$$
+$$\vartheta_{\alpha} = \beta_0 + f(\mathtt{time})$$
 
 ```{r fit-distributional-gams, cache = TRUE}
 m1 <- gam(y ~ s(t), data = sim_data, method = "REML")
@@ -625,10 +624,6 @@ background-size: contain
 
 GAMs use splines to represent the non-linear relationships between covariates, here `x`, and the response variable on the `y` axis.
 
----
-class: inverse middle center massive-subsection
-
-# GAMs
 
 ---
 class: inverse
@@ -712,12 +707,7 @@ Fitting a GAM involves finding the weights for the basis functions that produce 
 ---
 class: inverse middle center subsection
 
-# Avoid overfitting our sample
-
----
-class: inverse middle center subsection
-
-# Use a wiggliness penalty &mdash; avoid fitting too wiggly models
+# Use a wiggliness penalty &mdash; avoid over fitting
 
 ---
 
@@ -729,13 +719,13 @@ Fit three distributional GAMs
 
 2. A Gaussian distributional GAM with
 
-$$\vartheta_{\mu} = \beta_0 + f(\mathtt{t})$$
-$$\vartheta_{\sigma} = \beta_0 + f(\mathtt{t})$$
+$$\vartheta_{\mu} = \beta_0 + f(\mathtt{time})$$
+$$\vartheta_{\sigma} = \beta_0 + f(\mathtt{time})$$
 
 3. A Gamma distributional GAM with
 
-$$\vartheta_{\mu} = \beta_0 + f(\mathtt{t})$$
-$$\vartheta_{\alpha} = \beta_0 + f(\mathtt{t})$$
+$$\vartheta_{\mu} = \beta_0 + f(\mathtt{time})$$
+$$\vartheta_{\alpha} = \beta_0 + f(\mathtt{time})$$
 
 ---
 
@@ -745,7 +735,12 @@ Gaussian model had lowest AIC
 
 .center[
 ```{r m2-plot, fig.height = 5, fig.width = 1.7777 * 6}
-draw(m3, ncol = 2)
+p1 <- draw(m3, select = 1, rug = FALSE) +
+  labs(title = "Mean")
+p2 <- draw(m3, select = 2, rug = FALSE,
+           overall_uncertainty = FALSE) +
+  labs(title = "Variance")
+p1 + p2 + plot_layout(ncol = 2)
 ```
 ]
 
@@ -843,15 +838,6 @@ Today I will focus only on the main algal groups:
 * cryptophytes through Alloxanthin,
 * cyanobacteria and chlorophytes through Lutein-Zeaxanthin & pheophytin b, and
 * total algae through beta carotene
-
----
-class: inverse middle center big-subsection
-
-# Challenge
-
-???
-
-The challenge is to estimate how the mean **and** the variance changed continuously throughout the experimental manipulation
 
 ---
 
@@ -956,6 +942,392 @@ Need to combine variance estimates for individual taxa into a community measure 
 Can we use these kinds of model to estimate values that are required in theoretical approaches to ecological stability etc?
 
 ---
+
+# But&hellip; 1
+
+Most palaeo data aren't so nicely behaved
+
+Each slice of mud contains a different number of "lake years"
+
+The greater the number of "lake years" the lower the variance
+
+Implies a trend of increasing variance
+
+Model this *effect* &mdash; include amount of time in each slice (`lake_years`) in the $\vartheta_{\sigma}$ or $\vartheta_{\alpha}$
+
+See Simpson (2018) for a discussion on this
+
+---
+
+# But&hellip; 2
+
+Each eDNA sample represents a different amount effort spent counting things &mdash; number of reads
+
+This too(!) implies heterogeneity in the data
+
+Don't rarefy your eDNA counts (e.g. McMurdie & Holmes 2014)
+
+Use an offset (term with constant $\beta_{\text{offset}} = 1$) &mdash; `offset(log(n_reads))`
+
+Can do better &mdash; estimate size factors $s$ from all samples c.f. *DESeq2*
+
+Extra-poisson variance is the norm &mdash; use a negative binomial or **Tweedie** response
+
+---
+class: inverse middle center big-subsection
+
+# Multivariate data
+
+---
+
+## Tradition
+
+* Typically proportional composition
+
+* Dimension reductions via ordination
+
+* Clustering
+
+* Dissimilarity
+
+* Approximations
+
+---
+class: inverse
+background-image: url('resources/anne-nygard-yYRAvcPrWms-unsplash.jpg')
+background-size: cover
+
+# Maslow's hammer
+
+.footnote[source: Anne Nygard]
+
+---
+
+# It's OK to follow tradition
+
+The traditional methods haven't stopped working
+
+--
+
+But at some point they may hold us back
+
+---
+class: inverse middle center big-subsection
+
+# Topic models
+
+---
+
+# Complex multivariate species data
+
+.center[
+![:scale 85%](resources/foy-percent-data.png)
+]
+
+.footnote[
+Data provided by Jeffery Stone (Indiana State University)
+]
+
+---
+
+# Dimension reduction
+
+Typically we can't model all 100+ taxa in data sets like this
+
+- (M)ARSS-like models don't like the large $n$
+
+Seek a reduced dimensionality of the data that preserves the signal
+
+Existing dimension reduction methods aren't appropriate for questions we want to ask
+
+- Interpretation of latent factors is complex (PCA, CA, Principal Curves)
+- Linear combination of all taxa
+
+Can we group species into $J$ *associations* and soft cluster samples as compositions of these associations?
+
+Twinspan?
+
+---
+
+# Foy Lake &mdash; Montana
+
+.center[
+![:scale 100%](resources/foy-lake-gmap-zoomed-out-satellite.png)
+]
+
+---
+
+# Foy Lake &mdash; Montana
+
+.center[
+![:scale 100%](resources/foy-lake-gmap-satellite.png)
+]
+
+---
+
+# Topic models
+
+Machine learning approach for organizing text documents
+
+- **Latent Dirichlet Allocation (LDA)** &mdash;  (Blei, Ng, & Jordan, *J. Mach. Learn. Res.* 2003)
+
+*Generative* model for word occurences in documents
+
+- Valle, Baiser, Woodall, & Chazdon, R. (2014) *Ecology Letters* **17**
+
+- Christensen, Harris, & Ernest. (2018) *Ecology* doi:10.1002/ecy.2373
+
+---
+
+# Community of Skittles
+
+.center[
+![:scale 75%](resources/bowl-of-skittles.jpg)
+]
+
+---
+
+# Individual skittles from one of four flavoured packs
+
+.center[
+![:scale 65%](resources/skittles-packets.jpg)
+]
+
+What are the proportion of flavours in each pack?
+
+How many of each pack comprise the skittle community?
+
+---
+
+# Latent Dirichlet Allocation
+
+Aim is to infer the 
+
+- distribution of skittle **flavours** within each pack $\beta_j$, and
+- distribution of skittle **packs** within each community (*sample*)
+
+Achieve a soft clustering of samples &mdash; mixed membership model
+
+Achieve a soft clustering of **species** (flavours) into **associations** of taxa (packs)
+
+User supplies $J$ &mdash; the number of associations *a priori* &mdash; $j = \{1, 2, \dots, J\}$
+
+$J$ can be chosen using AIC, *perplexity*, CV, ...
+
+---
+
+# Intuition behind LDA
+
+Latent Dirichlet Allocation represents a trade-off between two goals
+
+1. for each sample, allocate its individuals to a **few associations of species**
+2. in each association, assign high probability to a **few species**
+
+---
+
+# Intuition behind LDA
+
+These are in opposition
+
+* assigning a sample to a single association makes *2* **hard** &mdash; all its species must have high probability under that one topic
+* putting very few species in each association makes *1* **hard** &mdash; to cover all individuals in a sample must assign sample to many associations
+
+Trading off these two goals therefore results in LDA finding tightly co-occurring species
+
+---
+
+# Latent Dirichlet Allocation
+
+1. Flavour distribution for $j$th type of Skittle $\beta_j \sim \text{Dirichlet}(\delta)$
+
+2. Proportions of each type in the Skittle community $\theta \sim \text{Dirichlet}(\alpha)$
+
+3. For each skittle $s_i$
+
+    - Choose a pack in proportion
+    
+        $$z_i \sim \text{Multinomial}(\theta)$$
+
+    - Choose a flavour from chosen pack with probability
+    
+        $$p(s_i | z_i, \beta_j) \sim \text{Multinomial}(\delta)$$
+
+---
+
+# Correlated Topic Model
+
+LDA assumes associations of species are **uncorrelated**
+
+Potentially more *parsimonious* & *realistic* if associations were correlated
+
+Proportions of each type in the Skittle community &mdash; draw
+
+$$\eta \sim N(\mu, \Sigma)$$
+	
+Then transform $\eta_J$ to proportional scale
+
+$\Sigma$ controls the correlation between *associations*
+
+Blei & Lafferty (2007) *Ann. Appl. Stat.* **1**, 17&ndash;35.
+
+---
+
+# Correlated Topic Model
+
+.center[
+![:scale 80%](resources/foy-ctm-time-series.png)
+]
+
+---
+
+# Displaying results
+
+Traditionally large corpus &mdash; *interactive* exploration of results
+
+- plot topic proportions over time
+
+- ordinatate topic proportions
+
+    - $\text{PCA}_{\text{Hellinger}}$, CA, etc
+
+---
+
+# Latent Dirichlet Allocation &mdash; Association 1
+
+.center[
+![:scale 100%](resources/lda-topic-1-viz.png)
+]
+
+---
+
+# Latent Dirichlet Allocation &mdash; Association 2
+
+.center[
+![:scale 100%](resources/lda-topic-2-viz.png)
+]
+
+---
+
+# Latent Dirichlet Allocation &mdash; Association 3
+
+.center[
+![:scale 100%](resources/lda-topic-3-viz.png)
+]
+
+---
+
+# Latent Dirichlet Allocation &mdash; Association 4
+
+.center[
+![:scale 100%](resources/lda-topic-4-viz.png)
+]
+
+---
+
+# Latent Dirichlet Allocation &mdash; Trend estimation
+
+LDA knows nothing about the temporal ordering of the samples
+
+A generative model for the data
+
+Treat the topic proportions as data into some other model &mdash; *explanation*
+
+Estimate trends in proportions of species associations using Dirichlet regression
+
+---
+
+# Dirichlet regression
+
+Dirichlet distribution describes multivariate proportions on a *simplex*
+
+% sand, silt, clay
+
+Only need to know two of these for complete information &mdash; total is 100%
+
+Closed compositional data
+
+Multinomial is for *counts* from a total count
+
+Dirichlet is for **true** proportions
+
+---
+
+# Dirichlet regression
+
+Model for the proportions $\alpha$ (or other parametrisation)
+
+.center[
+![:scale 65%](resources/page1-1280px-Dirichlet.jpg)
+]
+
+---
+
+# CTM &mdash; Trend (Dirichlet Regression)
+
+.center[
+![:scale 100%](resources/ctm-time-series-with-dirichlet-regression.png)
+]
+
+---
+
+# Summary
+
+LDA & CTM proved well-capable of summarizing the complex community dynamics of Foy Lake
+
+- Reduced 113 taxa to 10 associations of species
+- Species associations match closely the expert interpretation of the record
+    - make autecological sense also
+- The CTM was more parsimonious &mdash; removed one rare association
+- Estimated trends in proportions of species associations capture mixture of
+    - smooth, slowly varying trends, and
+	- rapid (regime shift?) state change ~ 1.3 ky BP
+
+---
+
+# Future directions
+
+Choosing $J$ is inconvenient
+
+Address this via **Hierarchical Dirichlet Processes**
+
+- assume $J$ is infinite & put a prior distribution over $J$
+
+Associations in LDA & CTM are static &mdash; distributions are fixed for all samples
+
+- dynamic & structural topic models allow distributions to vary smoothly with time
+
+Many developments in this field:
+
+- *Chinese Restaurant Process*,
+- *Indian Buffet Process*, &
+- ...
+
+---
+
+# Related topics
+
+- *Structural topic model* &mdash; include covariates in the topic model
+
+    - proportions of each species in the data set (corpus)
+    - proportions of each association in samples
+    - allow the proportions to vary over time
+    - *dynamic topic model* is a special case
+
+- Relationships with ecological theory
+
+    - Harris *et al* (2015). Linking Statistical and Ecological Theory: Hubbell’s Unified Neutral Theory of Biodiversity as a Hierarchical Dirichlet Process. *Proc. IEEE PP*, 1–14. <https://doi.org/10.1109/JPROC.2015.2428213>
+    
+    - In large samples Hubbell's UNTB $\rightarrow$ HDP
+
+---
 class: inverse middle center big-subsection
 
 # Thank you
+
+---
+
+# Selected references
+
+[McMurdie, P.J., Holmes, S., 2014. PLoS Comput. Biol. 10, e1003531.](https://doi.org/10.1371/journal.pcbi.1003531)
+
+[Simpson, G.L., 2018. Frontiers in Ecology and Evolution 6, 149.](https://doi.org/10.3389/fevo.2018.00149)
