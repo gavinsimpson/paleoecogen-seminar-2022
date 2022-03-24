@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Detecting change in palaeoecological time series, old and new</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Gavin Simpson" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="slides.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: inverse, middle, left, my-title-slide, title-slide
+
+# Detecting change in palaeoecological time series, old and new
+### Gavin Simpson
+### Department of Animal Science • Aarhus Universitet
+### PaleoEcoGen Seminar Series • March 10, 2022
+
+---
+
+
+
+
+### Land acknowledgment
+
+* This work was start at University of Regina, on Treaty 4 lands
+
+### Funding
+
+.row[
+
+.col-4[
+.center[![:scale 80%](./resources/NSERC_C.svg)]
+]
+
+.col-4[
+.center[![:scale 100%](./resources/fgsr-logo.jpg)]
+]
+
+.col-4[
+.center[![:scale 100%](./resources/AUFF_logo_en.png)]
+]
+
+]
+
+### Data
+
+* Peter Leavitt (URegina) for the Lake 227 pigment data
+* The pigment samples were collected from Lake 227 in the ELA, which is on Treaty 3 lands
+
+### Slides
+
+* [bit.ly/paleoecogen-gavin](http://bit.ly/paleoecogen-gavin) &amp;copy; Simpson (2020&amp;ndash;2022) [![Creative Commons Licence](https://i.creativecommons.org/l/by/4.0/88x31.png)](http://creativecommons.org/licenses/by/4.0/)
+
+???
+
+This research was conducted while I was at the University of Regina, which is situated on the territories of the nay-hi-yuh-wuk (Cree; nêhiyawak), uh-nish-i-naa-payk (Salteaux; Anihšināpēk), Dakota, Lakota, and Nakoda, and the homeland of the Métis/Michif Nation.
+
+The fossil pigment data I will talk about later were collected by my colleague at the University of Regina, Dr. Peter Leavitt, at Lake 227 in the Experimental Lakes Area in northern Ontario, which is on Treaty 3 lands, the territory of the Anishinaabe Nation.
+
+---
+class: inverse middle center big-subsection
+
+# Resilience
+
+---
+
+# Alternative stable states
+
+.row[
+
+.col-9[
+Under range of conditions multiple ecosystem states may exist
+
+Stability landscapes depict equilibria and basins of attraction
+
+Valleys are stable states
+
+External conditions alter the stability landscape
+
+Disturbances can kick a system between states
+
+Variance used as EWS of impending state change
+]
+
+.col-3[
+.center[
+![](./resources/fig-3-scheffer-2001-nature.jpg)&lt;!-- --&gt;
+]
+.smaller[Scheffer et al Nature 2001]
+]
+]
+
+---
+
+# Variance as resilience
+
+Intuitive &amp; key descriptor of ecosystem state &amp; community dynamics
+
+.row[
+.col-6[
+.center[
+![](./resources/scheffer-2012-high-resilience.jpg)&lt;!-- --&gt;
+]
+]
+
+.col-6[
+.center[
+![](./resources/scheffer-2012-low-resilience.jpg)&lt;!-- --&gt;
+]
+]
+.col-12[
+.small[Source: Scheffer *et al* Science (2012)]
+]
+]
+
+???
+
+The variance is an important measure of ecosystem state &amp; community dynamics
+
+Ecologists have linked variance with coexistence of populations and variance can be interpreted in terms of resilience theory
+
+Here I'm showing two cartoons;
+
+A: in the high resilience state the ecosystem returns rapidly to the equilibrium following perturbation and hence has low variance
+
+B: in the low resilience state, where the basin of attraction has become shallower, the ecosystem takes longer to return to equilibrium following perturbation and hence exhibits high variance
+
+Variance, however, is much harder to estimate from data
+
+---
+
+# Resilience
+
+Resilience has (too) many definitions
+
+--
+
+&gt; as the time required for an ecosystem to return to an equilibrium or steady-state following a perturbation
+
+--
+
+Some ecologists would use that definition for *stability*
+
+Buzz Holling referred to this as *engineering resilience*
+
+--
+
+If you don't buy any of that:
+
+Phenomenologically, community variance is a useful thing to know&amp;hellip;
+
+--
+
+&amp;hellip;?
+
+???
+
+We could (and many people have) spent decades quibbling about what "resilience" is and how to define it
+
+From a phenomenological viewpoint, I hope we can agree that the variance of a community tells us something about the dynamics of that community and change in variance tells us something about changes in those dynamics over time --- and that is something useful
+
+---
+
+# How do ecologists compute variance?
+
+Using metrics
+
+--
+
+.bigger[
+🤬
+]
+
+--
+
+Ecologists get a number and do things with it
+
+Typically brute force inference
+
+--
+
+Statisticians want to know the properties of this novel estimator
+
+Typically brute forcing inference is fraught with problems
+
+
+---
+
+# Moving windows
+
+.row[
+.col-6[
+
+Moving window approach:
+
+1. detrend
+2. choose window size
+3. estimate variance
+4. move window 1 time step
+5. repeat 3. &amp; 4. until done
+6. look for trend
+
+]
+
+.col-6[
+.center[
+![](./resources/dakos-rolling-window-figure-modified.png)&lt;!-- --&gt;
+]
+.small[Modified from Dakos *et al* (2012) PLOS One]
+]
+]
+
+???
+
+One way to estimate the variance of a series is by using a moving window
+
+Here the analyst first detrends the time series
+
+Choose an appropriate window size
+
+Starting from the beginning of the series calculate the variance of the observations in the window
+
+Move the window along one time step and repeat 3 and 4 until you get to the end of the series
+
+A trend in the resulting variance time series is estimated using Kendall's rank correlation tau
+
+In this example the interest was in the end of the series so they right-aligned the window meaning they had to observe half the series before they could calculate the variance
+
+---
+
+# Problems
+
+*Ad hoc*
+
+* How to detrend (method, complexity of trend, ...)
+* What window width?
+
+Ideally regularly spaced data
+
+* What to do about gaps, missing data, irregularly spaced data?
+
+Statistical testing hard
+
+* Kendall's `\(\tau\)` assumes independence
+* Surrogate time series assumes regular sampling, sensitive to choice of ARMA
+
+???
+
+The whole approach is *ad hoc* with many knobs to twiddle &amp;mdash; how do you detrend the series? what width of window should be used?
+
+Suited to regularly spaced data so you have the same number of observations in each window, but what about series with data gaps, missing observations, or data that are irregularly spaced?
+
+Statistical inference is very hard; Kendall's tau assumes the data are independence but they can't be because of the moving window. Sometime surrogate time series are used to assess significance of the trend in variance; Surrogate time series are series generated with known properties that don't have a change in variance, but these approaches rely on classical techniques like ARMA models which only work for regularly spaced data and the test is sensitive to choice of orders in the ARMA
+
+---
+class: inverse middle center big-subsection
+
+# Distributional Models
+
+---
+class: inverse middle center big-subsection
+
+# Mean
+
+???
+
+The mean
+
+When we analyze data we mostly focus on this property of our data
+
+With summary statistics we often talk about the average of a set of values
+
+Or in a statistical model we might estimate expected change in the response for some change in one or more covariates
+
+Or we may be interested in estimating the trend in a data series where the trend described how the expected value of y changes over time
+
+
+
+---
+class: inverse middle center big-subsection
+
+# Variance
+
+???
+
+There are other important properties of data however and in the short case study I want to talk about the variance &amp; how we can use statistical models to investigate changes in the variance of ecosystems over time
+
+---
+
+# Parameters beyond the mean
+
+![](index_files/figure-html/gaussian-distributions-plt-1.svg)&lt;!-- --&gt;
+
+???
+
+To do this we'll need models for the variance of a data set
+
+If we think of the Gaussian distribution that distribution has two parameters, the mean and the variance
+
+In linear regression we model the mean of the response at different values of the covariates, and assume the variance is constant at a value estimated from the residuals
+
+In the left panel I'm showing how the Gaussian distribution changes as we alter the mean while keeping the variance fixed, while in the right panel I keep the mean fixed but vary the variance &amp;mdash; the parameters are independent
+
+---
+
+# Distributional models
+
+.medium[
+`$$y_{i} | \boldsymbol{x}_i \boldsymbol{z}_i \sim \mathcal{D}(\vartheta_{1}(\boldsymbol{x}_i), \ldots, \vartheta_{K}(\boldsymbol{x}_i))$$`
+]
+
+For the Gaussian distribution
+
+* `\(\vartheta_{1}(\boldsymbol{x}_i) = \mu(\boldsymbol{x}_i)\)`
+
+* `\(\vartheta_{2}(\boldsymbol{z}_i) = \sigma(\boldsymbol{z}_i)\)`
+
+Provide a list of formulas, one per parameter
+
+
+```r
+m &lt;- gam( list( y ~ s(time),          # &lt;- formula for mean
+                  ~ s(time) ),        # &lt;- formula for variance 
+          data = df, method = "REML", family = gaulss())
+```
+
+???
+
+Instead of treating the variance as a nuisance parameter, we could model both the variance **and** the mean as functions of the covariates
+
+This is done using what is called a *distributional model*
+
+In this model we say that the response values y_i, given the values of one or more covariates x_i follow some distribution with parameters theta, which are themselves functions of one or more covariates
+
+For the Gaussian distribution theta 1 would be the mean and theta 2 the variance (or standard deviation)
+
+We do not need to restrict ourselves to the Gaussian distribution however
+
+---
+
+# The Gamma distribution
+
+![](index_files/figure-html/gamma-dist-1.svg)&lt;!-- --&gt;
+
+???
+
+The gamma distribution would be more appropriate for describing the pigment data as it allows for positive continuous values, where those values are skewed, with some large values
+
+Here I'm showing different types of gamma distribution that vary in the mean and their variance and we should note that unlike the Gaussian distribution, we cannot change the mean without also changing the variance of the gamma distribution
+
+---
+class: inverse middle center big-subsection
+
+# Simulated data
+
+---
+
+# Simulated data
+
+Well-studied model of harvesting and overexploitation
+
+Resource biomass `\(x\)` grows logistically and is harvested according to
+
+`$$dx = \left(r x \left(1 - \frac{x}{K} \right) - c \frac{x^2}{x^2 + h^2} \right) dt + \sigma x dW$$`
+
+.row[
+
+.col-6[
+* `\(r\)` is growth rate
+* `\(K\)` carrying capacity
+* `\(h\)` is the half-saturation constant
+
+]
+
+.col-6[
+* `\(c\)` grazing rate
+* `\(dW\)` is a white noise process with intensity `\((\sigma x)^2 / dt\)`
+]
+
+]
+Deterministic case as `\(c\)` crosses a threshold `\(c \approx 2.604\)` we have a critical transition
+
+---
+
+# Simulated data
+
+
+
+![](index_files/figure-html/plot-simulated-data-1.svg)&lt;!-- --&gt;
+
+---
+
+# Distributional GAMs
+
+Fit three distributional GAMs
+
+1. A basic GAM with constant variance
+
+2. A Gaussian distributional GAM with
+
+`$$\vartheta_{\mu} = \beta_0 + f(\mathtt{time})$$`
+`$$\vartheta_{\sigma} = \beta_0 + f(\mathtt{time})$$`
+
+3. A Gamma distributional GAM with
+
+`$$\vartheta_{\mu} = \beta_0 + f(\mathtt{t})$$`
+`$$\vartheta_{\alpha} = \beta_0 + f(\mathtt{t})$$`
+
+
+
+---
+
+# Generalized Additive Models
+
+&lt;br /&gt;
+
+![](resources/tradeoff-slider.png)
+
+.references[Source: [GAMs in R by Noam Ross](https://noamross.github.io/gams-in-r-course/)]
+
+???
+
+GAMs are an intermediate-complexity model
+
+* can learn from data without needing to be informed by the user
+* remain interpretable because we can visualize the fitted features
+
+---
+class: inverse middle center large-subsection
+
+# GAMs fit wiggly functions
+
+
+
+---
+class: inverse
+background-image: url('resources/wiggly-things.png')
+background-size: contain
+
+???
+
+---
+
+# Wiggly things
+
+.center[![](resources/spline-anim.gif)]
+
+???
+
+GAMs use splines to represent the non-linear relationships between covariates, here `x`, and the response variable on the `y` axis.
+
+---
+class: inverse middle center massive-subsection
+
+# GAMs
+
+---
+class: inverse
+background-image: url('./resources/rob-potter-398564.jpg')
+background-size: contain
+
+# GAMs are not magical
+
+.footnote[
+&lt;a style="background-color:black;color:white;text-decoration:none;padding:4px 6px;font-family:-apple-system, BlinkMacSystemFont, &amp;quot;San Francisco&amp;quot;, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, Ubuntu, Roboto, Noto, &amp;quot;Segoe UI&amp;quot;, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:1.2;display:inline-block;border-radius:3px;" href="https://unsplash.com/@robpotter?utm_medium=referral&amp;amp;utm_campaign=photographer-credit&amp;amp;utm_content=creditBadge" target="_blank" rel="noopener noreferrer" title="Download free do whatever you want high-resolution photos from Rob Potter"&gt;&lt;span style="display:inline-block;padding:2px 3px;"&gt;&lt;svg xmlns="http://www.w3.org/2000/svg" style="height:12px;width:auto;position:relative;vertical-align:middle;top:-1px;fill:white;" viewBox="0 0 32 32"&gt;&lt;title&gt;&lt;/title&gt;&lt;path d="M20.8 18.1c0 2.7-2.2 4.8-4.8 4.8s-4.8-2.1-4.8-4.8c0-2.7 2.2-4.8 4.8-4.8 2.7.1 4.8 2.2 4.8 4.8zm11.2-7.4v14.9c0 2.3-1.9 4.3-4.3 4.3h-23.4c-2.4 0-4.3-1.9-4.3-4.3v-15c0-2.3 1.9-4.3 4.3-4.3h3.7l.8-2.3c.4-1.1 1.7-2 2.9-2h8.6c1.2 0 2.5.9 2.9 2l.8 2.4h3.7c2.4 0 4.3 1.9 4.3 4.3zm-8.6 7.5c0-4.1-3.3-7.5-7.5-7.5-4.1 0-7.5 3.4-7.5 7.5s3.3 7.5 7.5 7.5c4.2-.1 7.5-3.4 7.5-7.5z"&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/span&gt;&lt;span style="display:inline-block;padding:2px 3px;"&gt;Rob Potter&lt;/span&gt;&lt;/a&gt;
+]
+
+
+---
+class: inverse middle center large-subsection
+
+# Basis Expansions
+
+---
+
+# Splines formed from basis functions
+
+![](index_files/figure-html/basis-functions-1.svg)&lt;!-- --&gt;
+
+???
+
+Splines are built up from basis functions
+
+Here I'm showing a cubic regression spline basis with 10 knots/functions
+
+We weight each basis function to get a spline. Here all the basisi functions have the same weight so they would fit a horizontal line
+
+---
+
+# Weight basis functions &amp;#8680; spline
+
+.center[![](resources/basis-fun-anim.gif)]
+
+???
+
+But if we choose different weights we get more wiggly spline
+
+Each of the splines I showed you earlier are all generated from the same basis functions but using different weights
+
+---
+
+# How do GAMs learn from data?
+
+![](index_files/figure-html/example-data-figure-1.svg)&lt;!-- --&gt;
+
+???
+
+How does this help us learn from data?
+
+Here I'm showing a simulated data set, where the data are drawn from the orange functions, with noise. We want to learn the orange function from the data
+
+---
+
+# Maximise penalised log-likelihood &amp;#8680; &amp;beta;
+
+.center[![](resources/gam-crs-animation.gif)]
+
+???
+
+Fitting a GAM involves finding the weights for the basis functions that produce a spline that fits the data best, subject to some constraints
+
+---
+class: inverse middle center subsection
+
+# Avoid overfitting our sample
+
+---
+class: inverse middle center subsection
+
+# Use a wiggliness penalty &amp;mdash; avoid fitting too wiggly models
+
+---
+
+# Recap
+
+Fit three distributional GAMs
+
+1. A basic GAM with constant variance
+
+2. A Gaussian distributional GAM with
+
+`$$\vartheta_{\mu} = \beta_0 + f(\mathtt{t})$$`
+`$$\vartheta_{\sigma} = \beta_0 + f(\mathtt{t})$$`
+
+3. A Gamma distributional GAM with
+
+`$$\vartheta_{\mu} = \beta_0 + f(\mathtt{t})$$`
+`$$\vartheta_{\alpha} = \beta_0 + f(\mathtt{t})$$`
+
+---
+
+# Results
+
+Gaussian model had lowest AIC
+
+.center[
+![](index_files/figure-html/m2-plot-1.svg)&lt;!-- --&gt;
+]
+
+---
+class: inverse middle center big-subsection
+
+# It works
+
+---
+class: inverse middle center big-subsection
+
+# 😅
+
+---
+class: inverse middle center big-subsection
+
+# Real Data
+
+---
+class: inverse middle center big-subsection
+
+# Lake 227
+
+???
+
+Today I want to illustrate how we can use modern statistical models to continuously estimate the variance of multivariate time series using data from Lake 227 in the Experimental Lakes Area, Canada
+
+---
+
+# Lake 227
+
+.row[
+.col-6[
+* Experimentally manipulated
+
+* Annual sediment samples 1943&amp;ndash;1990
+
+* Analyzed for fossil pigments
+]
+]
+
+Cottingham *et al* (2000) **Ecology Letters** showed via a Levene's test that **variances** pre- &amp; post-intervention were different
+
+???
+
+The lake was experimentally manipulated to investigate responses to increased nutrients
+
+The lake is annually laminated and Peter Leavitt, URegina, measured the sub-fossil pigment concentrations for each year between 1943 and 1990
+
+Kathy Cottingham, Jim Rusak, and Peter Leavitt previously analyzed these data by separating them into control and treated sections and compared the variances of the two periods with a Levene's test, equivalent of a t-test but for differences of variances not means
+
+They showed that the algal community was more variable in the treated period than in the pre-manipulation period
+
+---
+
+# Lake 227
+
+![](index_files/figure-html/lake-227-pigment-data-1.svg)&lt;!-- --&gt;
+
+???
+
+Today I will focus only on the main algal groups:
+
+* diatoms &amp; chrysophytes through Fucoxanthin,
+* cryptophytes through Alloxanthin,
+* cyanobacteria and chlorophytes through Lutein-Zeaxanthin &amp; pheophytin b, and
+* total algae through beta carotene
+
+---
+class: inverse middle center big-subsection
+
+# Challenge
+
+???
+
+The challenge is to estimate how the mean **and** the variance changed continuously throughout the experimental manipulation
+
+---
+
+# Lake 227 sedimentary pigments
+
+Fitted gamma distributional model using {brms} 📦 and **Stan**
+`\begin{align*}
+y_t    &amp; \sim \mathcal{G}(\mu = \eta_{1,t}, \alpha = \eta_{2,t}) \\
+\eta_{1,t} &amp; = \exp(f_{1,\text{pigment}}(\text{Year}_t)) \\
+\eta_{2,t} &amp; = \exp(f_{2,\text{pigment}}(\text{Year}_t))
+\end{align*}`
+
+Mean `\(\mu\)` and shape `\(\alpha\)` each modelled with "random effect" spline using `bs = "fs"`
+
+Could also fit this using {mgcv} 📦 and `gammals()` or `twlss()` family if no censored pigments
+
+???
+
+To estimate how the mean and the variance of the pigment data changed during the experimental manipulation, I fitted a gamma distributional model using the brms package and the Stan Bayesian software
+
+We assume the responses are conditionally distributed gamma, and we model the mean and the shape parameter of the distribution with linear predictors
+
+Each linear predictor includes a smooth function of Year for each pigment
+
+After fitting we calculate the variance at each time point using the estimated values of the mean and the shape parameters using the posterior distribution of the response to generate credible intervals
+
+---
+
+# Results &amp;mdash; pigment means
+
+
+
+![](index_files/figure-html/lake-227-fitted-mean-1.svg)&lt;!-- --&gt;
+
+???
+
+This plot shows the estimated mean concentration for the five pigments estimated from the model, and which shows the increase in algal abundance during the experimental manipulation
+
+---
+
+# Results &amp;mdash; pigment variances
+
+![](index_files/figure-html/lake-227-fitted-sigma-1.svg)&lt;!-- --&gt;
+
+???
+
+In this plot are showing the estimated variance throughout the time series
+
+We clearly see the increased variance in the algal communities that Cottingham et al observed, but now we can provide a continuous estimate of the variance over time rather than having to split the data into two and compare the variance of the two time periods
+
+---
+
+# Summary
+
+* Variance is a useful measure of community dynamics &amp;mdash; maybe resilience too
+
+* Avoid *ad hoc* approaches if we can &amp;mdash; use a statistical model
+
+* Distributional models model all parameters of a conditional distribution
+
+* We can use distributional GAMs to model the variance of time series
+
+* We can do useful inference with these models
+
+    1. Have the full conditional distribution &amp;mdash; skewness etc
+    2. Have the posterior distribution &amp;mdash; makes inference easy
+
+---
+
+# Where next
+
+Need to combine variance estimates for individual taxa into a community measure of variance
+
+Can we use these kinds of model to estimate values that are required in theoretical approaches to ecological stability etc?
+
+---
+class: inverse middle center big-subsection
+
+# Thank you
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9",
+"slideNumberFormat": "<div class=\"progress-bar-container\">\n  <div class=\"progress-bar\" style=\"width: calc(%current% / %total% * 100%);\">\n  </div>\n</div>"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
